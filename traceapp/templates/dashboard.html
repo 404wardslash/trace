@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top">
+  <h1>Dashboard</h1>
+  <form class="toolbar" action="/export/md" method="post">
+    <label><input type="checkbox" name="include_creds" value="true"> creds</label>
+    <label><input type="checkbox" name="include_commands" value="true"> commands</label>
+    <button>Export Markdown</button>
+  </form>
+</header>
+<section class="cards">
+  <a class="card" href="/targets"><span>Targets</span><strong>{{ stats.targets }}</strong></a>
+  <a class="card" href="/todos"><span>Open todos</span><strong>{{ stats.open_todos }}</strong></a>
+  <a class="card" href="/findings"><span>Findings</span><strong>{{ stats.findings }}</strong></a>
+  <a class="card" href="/credentials"><span>Credentials</span><strong>{{ stats.creds }}</strong></a>
+</section>
+<section class="grid2">
+  <div>
+    <h2>Findings by Severity</h2>
+    <div class="severity">
+      {% for sev, count in sev_counts.items() %}
+      <div><a href="/findings?severity={{ sev }}"><span class="pill {{ sev }}">{{ sev }}</span></a><strong>{{ count }}</strong></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2>Quick Note</h2>
+    <form class="capture" action="/quick-note" method="post">
+      <textarea name="body" placeholder="Capture raw notes, commands, links, ideas..." autofocus></textarea>
+      <div class="row">
+        <select name="target_id">
+          <option value="">No target</option>
+          {% for t in targets %}
+          <option value="{{ t.id }}">{{ t.nickname }}</option>
+          {% endfor %}
+        </select>
+        <input name="tags" placeholder="tags">
+        <button>Add note</button>
+      </div>
+    </form>
+  </div>
+</section>
+<h2>Recent Timeline</h2>
+{% include "timeline_list.html" %}
+{% endblock %}

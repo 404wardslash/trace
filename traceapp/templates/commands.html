@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Commands</h1></header>
+<form class="inline-form" action="/commands" method="get">
+  <input name="q" value="{{ q }}" placeholder="search command/output">
+  <select name="target_id">
+    <option value="">Any target</option>
+    {% for target in targets %}
+    <option value="{{ target.id }}" {{ "selected" if target_id == target.id else "" }}>{{ target.nickname }}</option>
+    {% endfor %}
+  </select>
+  <input name="exit_code" value="{{ exit_code }}" placeholder="exit code">
+  <button>Filter</button>
+  <a class="button subtle" href="/commands">Clear</a>
+</form>
+<div class="command-list">
+  {% for command in commands %}
+  <details class="item command-item">
+    <summary>
+      <span class="mono">{{ command.command }}</span>
+      <span class="pill {{ 'low' if command.exit_code == 0 else 'high' }}">exit {{ command.exit_code }}</span>
+    </summary>
+    <div class="command-meta">
+      <time>{{ command.created_at|dt }}</time>
+      <span class="mono">{{ command.cwd }}</span>
+      <span>{% if command.target_id and target_by_id.get(command.target_id) %}{{ target_by_id[command.target_id].nickname }}{% else %}unassigned{% endif %}</span>
+    </div>
+    <pre>{{ command.output|terminal }}</pre>
+    <div class="actions">
+      <button class="subtle copy-btn" data-copy="{{ command.command }}" onclick="copyCmd(this); return false;">Copy</button>
+      <form action="/commands/{{ command.id }}/delete" method="post" onsubmit="return confirm('Delete this command log?');"><button class="danger">Delete</button></form>
+    </div>
+  </details>
+  {% else %}
+  <p class="muted">No command logs yet. Use <span class="mono">trace run</span>, <span class="mono">trace shell</span>, or <span class="mono">trace ssh</span>.</p>
+  {% endfor %}
+</div>
+<script>
+function copyCmd(btn) {
+  navigator.clipboard.writeText(btn.dataset.copy).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 1200);
+  });
+}
+</script>
+{% endblock %}

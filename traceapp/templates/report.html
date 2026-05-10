@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top">
+  <h1>Export Report</h1>
+  <span class="muted">HTML → open in browser → Ctrl+P → Save as PDF</span>
+</header>
+
+<div class="grid2">
+  <div>
+    <h2>Report Settings</h2>
+    <form class="stack" action="/report/export" method="get">
+      <div class="row">
+        <div style="flex:1">
+          <label class="muted" style="font-size:11px;display:block;margin-bottom:4px">Assessor Name</label>
+          <input name="assessor" placeholder="Your name / team" style="width:100%">
+        </div>
+        <div style="flex:1">
+          <label class="muted" style="font-size:11px;display:block;margin-bottom:4px">Client / Prepared For</label>
+          <input name="client" value="{{ eng.name }}" style="width:100%">
+        </div>
+      </div>
+      <div style="max-width:240px">
+        <label class="muted" style="font-size:11px;display:block;margin-bottom:4px">Classification</label>
+        <select name="classification" style="width:100%">
+          <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+          <option value="INTERNAL">INTERNAL</option>
+          <option value="RESTRICTED">RESTRICTED</option>
+          <option value="UNCLASSIFIED">UNCLASSIFIED</option>
+        </select>
+      </div>
+      <div class="row" style="gap:16px;flex-wrap:wrap">
+        <label><input type="checkbox" name="include_creds" value="true"> Include credentials appendix</label>
+        <label><input type="checkbox" name="include_commands" value="true"> Include command log appendix</label>
+      </div>
+      <button style="width:fit-content">Generate Report →</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Contents Preview</h2>
+    <div class="item" style="padding:16px">
+      <div class="row" style="margin-bottom:12px;gap:8px;flex-wrap:wrap">
+        {% for sev in ["critical","high","medium","low","info"] %}
+        <div style="text-align:center;min-width:56px">
+          <div style="font-size:22px;font-weight:800;color:var(--{% if sev=='critical' %}danger{% elif sev=='high' %}warning{% elif sev=='medium' %}warning{% elif sev=='low' %}accent{% else %}faint{% endif %})">{{ sev_counts[sev] }}</div>
+          <span class="pill {{ sev }}" style="font-size:9px">{{ sev }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="muted" style="font-size:12px;line-height:2">
+        <div>📄 Cover page + confidentiality notice</div>
+        <div>📋 Table of contents</div>
+        <div>📊 Executive summary + severity overview</div>
+        <div>🎯 Scope &amp; targets ({{ target_count }} target{{ 's' if target_count != 1 else '' }})</div>
+        <div>🔬 Methodology</div>
+        <div>🚨 {{ finding_count }} finding{{ 's' if finding_count != 1 else '' }}, sorted critical → info</div>
+        <div class="{{ '' if finding_count else 'faint' }}">
+          &nbsp;&nbsp;↳ Description · Steps · Evidence · Impact · Remediation
+        </div>
+        <div>📎 Evidence screenshots (embedded)</div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:8px">
+      Open the downloaded HTML in Chrome or Edge, then <strong>Ctrl+P → Save as PDF</strong>.
+      For best results set margins to "None" and enable "Background graphics".
+    </p>
+  </div>
+</div>
+{% endblock %}

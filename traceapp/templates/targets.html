@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Targets</h1></header>
+<form class="inline-form" action="/targets" method="post">
+  <input name="nickname" placeholder="web01" required>
+  <input name="address" placeholder="10.10.10.5" required>
+  <input name="tags" placeholder="tags">
+  <input name="notes" placeholder="notes">
+  <button>Add target</button>
+</form>
+<div class="table">
+  <div class="tr head"><span>Nickname</span><span>Address</span><span>Tags</span><span>Actions</span></div>
+  {% for target in targets %}
+  <div class="tr">
+    <a href="/targets/{{ target.id }}">{{ target.nickname }}</a>
+    <span>{{ target.address }}</span>
+    <span>{{ target.tags }}</span>
+    <span class="actions">
+      <a class="button subtle" href="/targets/{{ target.id }}">Open</a>
+      <form action="/targets/{{ target.id }}/delete" method="post" onsubmit="return confirm('Delete target {{ target.nickname }}? Related records will be unassigned.');"><button class="danger">Delete</button></form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

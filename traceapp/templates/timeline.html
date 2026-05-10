@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Timeline</h1><form><input name="q" value="{{ q }}" placeholder="search timeline"></form></header>
+{% include "timeline_list.html" %}
+{% endblock %}

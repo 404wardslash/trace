@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Edit Finding</h1><a href="/findings">Back</a></header>
+
+<form class="stack wide" action="/findings/{{ finding.id }}" method="post">
+  <input name="title" value="{{ finding.title }}" required>
+  <div class="row">
+    <select name="severity">{% for s in ["info","low","medium","high","critical"] %}<option {{ "selected" if finding.severity.value==s else "" }}>{{ s }}</option>{% endfor %}</select>
+    <select name="status">{% for s in ["idea","confirmed","needs-proof","reported"] %}<option {{ "selected" if finding.status.value==s else "" }}>{{ s }}</option>{% endfor %}</select>
+    <select name="target_id"><option value="">Unassigned</option>{% for t in targets %}<option value="{{ t.id }}" {{ "selected" if finding.target_id==t.id else "" }}>{{ t.nickname }}</option>{% endfor %}</select>
+    <input name="affected_service" value="{{ finding.affected_service }}" placeholder="service">
+  </div>
+  <textarea name="description" placeholder="Description">{{ finding.description }}</textarea>
+  <textarea name="steps_to_reproduce" placeholder="Steps to reproduce">{{ finding.steps_to_reproduce }}</textarea>
+  <textarea name="evidence" placeholder="Evidence notes">{{ finding.evidence }}</textarea>
+  <textarea name="impact" placeholder="Impact">{{ finding.impact }}</textarea>
+  <textarea name="remediation" placeholder="Remediation">{{ finding.remediation }}</textarea>
+  <div class="row">
+    <input name="tags" value="{{ finding.tags }}" placeholder="tags">
+    <input name="linked_command_ids" value="{{ finding.linked_command_ids }}" placeholder="linked command ids">
+    <input name="linked_evidence_ids" value="{{ finding.linked_evidence_ids }}" placeholder="linked evidence ids">
+  </div>
+  <button>Save finding</button>
+</form>
+
+<h2>Evidence</h2>
+
+<form class="inline-form" action="/findings/{{ finding.id }}/evidence" method="post" enctype="multipart/form-data">
+  <input type="file" name="upload" required>
+  <input name="notes" placeholder="caption / notes">
+  <button>Upload</button>
+</form>
+
+{% if evidence %}
+<div class="evidence-grid">
+  {% for ev in evidence %}
+  <article class="item">
+    {% if ev.mime_type.startswith("image/") %}
+    <img src="/evidence/{{ ev.id }}/file" alt="{{ ev.filename }}">
+    {% endif %}
+    <a href="/evidence/{{ ev.id }}/file" style="font-weight:600">{{ ev.filename }}</a>
+    {% if ev.notes %}<p class="muted" style="margin:6px 0 0;font-size:12px">{{ ev.notes }}</p>{% endif %}
+    <form action="/findings/{{ finding.id }}/evidence/{{ ev.id }}/delete" method="post"
+          onsubmit="return confirm('Delete {{ ev.filename }}?');" style="margin-top:10px">
+      <button class="danger">Delete</button>
+    </form>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No evidence attached yet.</p>
+{% endif %}
+
+<form action="/findings/{{ finding.id }}/delete" method="post"
+      onsubmit="return confirm('Delete this finding?');" style="margin-top:24px">
+  <button class="danger">Delete finding</button>
+</form>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top">
+  <h1>{{ target.nickname }}</h1>
+  <span class="mono muted">{{ target.address }}</span>
+</header>
+<form class="stack" action="/targets/{{ target.id }}" method="post">
+  <div class="row"><input name="nickname" value="{{ target.nickname }}" required><input name="address" value="{{ target.address }}" required><input name="tags" value="{{ target.tags }}" placeholder="tags"><button>Save target</button></div>
+  <textarea name="notes" placeholder="Target notes">{{ target.notes }}</textarea>
+</form>
+
+<section class="grid2">
+  <div>
+    <h2>Services</h2>
+    <form class="stack compact" action="/services" method="post">
+      <input type="hidden" name="target_id" value="{{ target.id }}">
+      <div class="row"><input name="port" type="number" placeholder="port" required><input name="protocol" value="tcp"><input name="name" placeholder="service"><button>Add</button></div>
+      <input name="product" placeholder="product/version">
+    </form>
+    {% for s in services %}
+    <details class="item">
+      <summary><span class="mono">{{ s.port }}/{{ s.protocol }}</span> {{ s.name }} <span class="muted">{{ s.product }}</span></summary>
+      <form class="stack compact" action="/services/{{ s.id }}" method="post">
+        <input type="hidden" name="target_id" value="{{ target.id }}">
+        <div class="row"><input name="port" type="number" value="{{ s.port }}" required><input name="protocol" value="{{ s.protocol }}"><input name="name" value="{{ s.name }}"><input name="product" value="{{ s.product }}"><button>Save</button></div>
+        <textarea name="notes">{{ s.notes }}</textarea>
+      </form>
+      <form action="/services/{{ s.id }}/delete" method="post" onsubmit="return confirm('Delete this service?');"><button class="danger">Delete service</button></form>
+    </details>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+
+  <div>
+    <h2>Findings</h2>
+    {% for f in findings %}
+    <details class="item">
+      <summary><span class="pill {{ f.severity.value }}">{{ f.severity.value }}</span> <a href="/findings/{{ f.id }}">{{ f.title }}</a> <span class="muted">{{ f.created_at|dt }}</span></summary>
+      <p class="muted">{{ f.status.value }}{% if f.affected_service %} · {{ f.affected_service }}{% endif %}</p>
+    </details>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+
+  <div>
+    <h2>Notes</h2>
+    {% for n in notes %}
+    <details class="item">
+      <summary>{{ (n.body.split('\n')[0] or 'Note #' ~ n.id)[:60] }} <span class="muted">{{ n.created_at|dt }}</span></summary>
+      <div class="rendered">{{ n.body|markdown|safe }}</div>
+    </details>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+
+  <div>
+    <h2>Credentials</h2>
+    {% for c in creds %}
+    <article class="item">
+      <div class="row"><span class="mono">{{ c.username }}</span><span class="muted">/</span><span class="mono">{{ c.secret }}</span><span class="pill">{{ c.service }}</span><span class="muted">{{ c.status.value }}</span></div>
+    </article>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+
+  <div>
+    <h2>Todos</h2>
+    {% for t in todos %}
+    <article class="item">
+      <div class="row">
+        <form action="/todos/{{ t.id }}/toggle" method="post"><button class="subtle" style="min-height:24px;padding:2px 8px;font-size:12px;">{{ "✓" if t.status.value == "done" else "○" }}</button></form>
+        <span style="{{ 'text-decoration:line-through;color:var(--faint)' if t.status.value == 'done' else '' }}">{{ t.text }}</span>
+        {% if t.priority != "normal" %}<span class="pill">{{ t.priority }}</span>{% endif %}
+      </div>
+    </article>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+
+  <div>
+    <h2>Command Logs</h2>
+    {% for c in commands %}
+    <details class="item command-item">
+      <summary>
+        <span class="mono">{{ c.command }}</span>
+        <span class="pill {{ 'low' if c.exit_code == 0 else 'high' }}">exit {{ c.exit_code }}</span>
+      </summary>
+      <div class="command-meta"><time>{{ c.created_at|dt }}</time><span class="mono">{{ c.cwd }}</span></div>
+      <pre>{{ c.output|terminal }}</pre>
+      <button class="subtle copy-btn" data-copy="{{ c.command }}" onclick="copyCmd(this); return false;">Copy</button>
+    </details>
+    {% else %}<p class="muted">None</p>{% endfor %}
+  </div>
+</section>
+
+<h2>Import nmap</h2>
+<form class="inline-form" action="/targets/{{ target.id }}/import-nmap" method="post" enctype="multipart/form-data">
+  <input type="file" name="upload" accept=".xml,.gnmap,.nmap,.txt" required>
+  <button>Import services</button>
+  <span class="muted" style="font-size:12px">XML (<span class="mono">-oX</span>) or grepable (<span class="mono">-oG</span>)</span>
+</form>
+
+<form action="/targets/{{ target.id }}/delete" method="post" onsubmit="return confirm('Delete target {{ target.nickname }}? Related records will be unassigned.');"><button class="danger">Delete target</button></form>
+
+<script>
+function copyCmd(btn) {
+  navigator.clipboard.writeText(btn.dataset.copy).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 1200);
+  });
+}
+</script>
+{% endblock %}

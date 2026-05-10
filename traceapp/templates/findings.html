@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top">
+  <h1>Findings</h1>
+  <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+    <form class="row">
+      <select name="severity"><option value="">Any severity</option>{% for s in ["critical","high","medium","low","info"] %}<option value="{{ s }}" {{ "selected" if severity==s else "" }}>{{ s }}</option>{% endfor %}</select>
+      <select name="status"><option value="">Any status</option>{% for s in ["idea","confirmed","needs-proof","reported"] %}<option value="{{ s }}" {{ "selected" if status==s else "" }}>{{ s }}</option>{% endfor %}</select>
+      <button>Filter</button>
+      {% if severity or status %}<a class="button subtle" href="/findings">Clear</a>{% endif %}
+    </form>
+    <button type="button" id="new-finding-btn">+ New Finding</button>
+  </div>
+</header>
+
+<div id="add-form-wrapper" style="display:none;margin-bottom:16px">
+  <details class="item" id="template-picker" style="margin-bottom:12px">
+    <summary><strong>From template…</strong> <span class="muted" style="font-size:12px">{{ finding_templates|length }} templates</span></summary>
+    <div style="margin-top:10px">
+      <div class="row" style="gap:4px;flex-wrap:wrap">
+        {% for t in finding_templates %}
+        <button type="button" class="subtle tpl-btn" data-tpl="{{ t|tojson|e }}"
+          style="font-size:11px;padding:4px 10px;border-radius:20px">
+          <span class="pill {{ t.severity }}" style="font-size:9px;padding:1px 6px">{{ t.severity }}</span>
+          {{ t.title }}
+        </button>
+        {% endfor %}
+      </div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Click a template to pre-fill the form below.</p>
+    </div>
+  </details>
+
+  <form class="stack" action="/findings" method="post" id="add-form">
+    <div class="row">
+      <input name="title" id="f-title" placeholder="Finding title" required style="flex:3">
+      <select name="severity" id="f-severity">{% for s in ["info","low","medium","high","critical"] %}<option>{{ s }}</option>{% endfor %}</select>
+      <select name="status" id="f-status">{% for s in ["idea","confirmed","needs-proof","reported"] %}<option>{{ s }}</option>{% endfor %}</select>
+    </div>
+    <div class="row">
+      <select name="target_id" id="f-target">
+        <option value="">Unassigned</option>
+        {% for t in targets %}<option value="{{ t.id }}">{{ t.nickname }}</option>{% endfor %}
+      </select>
+      <input name="affected_service" id="f-service" placeholder="service / port">
+      <input name="tags" id="f-tags" placeholder="tags">
+    </div>
+    <textarea name="description" id="f-description" placeholder="Description (markdown supported)"></textarea>
+    <textarea name="impact" id="f-impact" placeholder="Impact" style="min-height:72px"></textarea>
+    <textarea name="steps_to_reproduce" id="f-steps" placeholder="Steps to reproduce" style="min-height:72px"></textarea>
+    <textarea name="evidence" id="f-evidence" placeholder="Evidence (paste proof, command output, etc.)"></textarea>
+    <textarea name="remediation" id="f-remediation" placeholder="Remediation" style="min-height:72px"></textarea>
+    <div class="row">
+      <button>Create Finding</button>
+      <button type="button" id="cancel-finding-btn" class="subtle">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<div class="table" style="margin-top:20px">
+  <div class="tr head"><span>Severity</span><span>Status</span><span>Title</span><span>Added</span></div>
+  {% for f in findings %}
+  <div class="tr">
+    <span class="pill {{ f.severity.value }}">{{ f.severity.value }}</span>
+    <span>{{ f.status.value }}</span>
+    <a href="/findings/{{ f.id }}">{{ f.title }}</a>
+    <span class="actions"><time class="muted">{{ f.created_at|dt }}</time> <form action="/findings/{{ f.id }}/delete" method="post" onsubmit="return confirm('Delete this finding?');"><button class="danger">Delete</button></form></span>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function showForm() {
+  document.getElementById('add-form-wrapper').style.display = '';
+  document.getElementById('new-finding-btn').style.display = 'none';
+}
+function hideForm() {
+  document.getElementById('add-form-wrapper').style.display = 'none';
+  document.getElementById('new-finding-btn').style.display = '';
+}
+
+document.getElementById('new-finding-btn').addEventListener('click', () => {
+  showForm();
+  document.getElementById('f-title').focus();
+});
+
+document.getElementById('cancel-finding-btn').addEventListener('click', hideForm);
+
+document.querySelectorAll('.tpl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = JSON.parse(btn.dataset.tpl);
+    document.getElementById('f-title').value = t.title || '';
+    document.getElementById('f-description').value = t.description || '';
+    document.getElementById('f-impact').value = t.impact || '';
+    document.getElementById('f-steps').value = t.steps_to_reproduce || '';
+    document.getElementById('f-remediation').value = t.remediation || '';
+    const sevEl = document.getElementById('f-severity');
+    if (t.severity) {
+      for (let opt of sevEl.options) { if (opt.value === t.severity) { opt.selected = true; break; } }
+    }
+    document.getElementById('template-picker').removeAttribute('open');
+    showForm();
+    document.getElementById('f-title').focus();
+  });
+});
+</script>
+{% endblock %}

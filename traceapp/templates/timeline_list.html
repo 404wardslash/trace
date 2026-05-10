@@ -1,0 +1,12 @@
+<div class="timeline">
+  {% for event in events %}
+  <article>
+    <span class="kind">{{ event.kind }}</span>
+    <h3>{{ event.title }}</h3>
+    {% if event.body %}<p>{{ event.body|terminal }}</p>{% endif %}
+    <time>{{ event.created_at|dt }}</time>
+  </article>
+  {% else %}
+  <p class="muted">No events yet.</p>
+  {% endfor %}
+</div>

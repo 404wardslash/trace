@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Notes</h1><form><input name="q" value="{{ q }}" placeholder="filter notes"></form></header>
+<form class="stack" action="/quick-note" method="post">
+  <textarea name="body" placeholder="Markdown note" required></textarea>
+  <div class="row"><select name="target_id"><option value="">Unassigned</option>{% for t in targets %}<option value="{{ t.id }}">{{ t.nickname }}</option>{% endfor %}</select><input name="tags" placeholder="tags"><button>Add note</button></div>
+</form>
+{% for note in notes %}
+<details class="item">
+  <summary>{{ (note.body.split('\n')[0] or 'Note #' ~ note.id)[:80] }} <span class="muted">{% if note.tags %} · {{ note.tags }}{% endif %} · {{ note.created_at|dt }}</span></summary>
+  <div class="rendered">{{ note.body|markdown|safe }}</div>
+  <form class="stack compact" action="/notes/{{ note.id }}" method="post">
+    <textarea name="body" required>{{ note.body }}</textarea>
+    <div class="row"><select name="target_id"><option value="">Unassigned</option>{% for t in targets %}<option value="{{ t.id }}" {{ "selected" if note.target_id==t.id else "" }}>{{ t.nickname }}</option>{% endfor %}</select><input name="tags" value="{{ note.tags }}" placeholder="tags"><button>Save</button></div>
+  </form>
+  <form action="/notes/{{ note.id }}/delete" method="post" onsubmit="return confirm('Delete this note?');"><button class="danger">Delete note</button></form>
+</details>
+{% endfor %}
+{% endblock %}

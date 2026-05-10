@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trace</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Trace</div>
+    <div class="eng">{{ eng.name if eng else "No engagement" }}</div>
+    <form class="eng-switch" action="/engagements/open" method="post">
+      <input type="hidden" name="next" value="{{ request.url.path }}">
+      <select name="slug" onchange="this.form.submit()">
+        {% for item in engagements %}
+        <option value="{{ item.slug }}" {{ "selected" if eng and item.id == eng.id else "" }}>{{ item.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% set p = request.url.path %}
+    <nav>
+      <a href="/engagements" class="{{ 'active' if p == '/engagements' else '' }}">Engagements</a>
+      <div class="nav-sep"></div>
+      <a href="/" class="{{ 'active' if p == '/' else '' }}">Dashboard</a>
+      <a href="/targets" class="{{ 'active' if p.startswith('/targets') else '' }}">Targets</a>
+      <a href="/findings" class="{{ 'active' if p.startswith('/findings') else '' }}">Findings</a>
+      <a href="/notes" class="{{ 'active' if p == '/notes' else '' }}">Notes</a>
+      <a href="/credentials" class="{{ 'active' if p == '/credentials' else '' }}">Credentials</a>
+      <a href="/todos" class="{{ 'active' if p == '/todos' else '' }}">Todos</a>
+      <a href="/commands" class="{{ 'active' if p == '/commands' else '' }}">Commands</a>
+      <a href="/timeline" class="{{ 'active' if p == '/timeline' else '' }}">Timeline</a>
+      <a href="/search" class="{{ 'active' if p == '/search' else '' }}">Search</a>
+      <div class="nav-sep"></div>
+      <a href="/import/nmap" class="{{ 'active' if p == '/import/nmap' else '' }}">Import nmap</a>
+      <a href="/snippets" class="{{ 'active' if p == '/snippets' else '' }}">Snippets</a>
+      <a href="/report" class="{{ 'active' if p == '/report' else '' }}">Report</a>
+    </nav>
+  </aside>
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

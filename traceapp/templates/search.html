@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Search</h1><form><input name="q" value="{{ q }}" placeholder="jenkins, 10.10.10.5, password..." autofocus><button>Search</button></form></header>
+<div class="table">
+  {% for kind, row_id, title, body in results %}
+  <div class="tr"><span>{{ kind }} #{{ row_id }}</span><span>{{ title }}</span><span>{{ body }}</span></div>
+  {% else %}<p class="muted">Search across targets, notes, commands, findings, credentials, todos, evidence, services, and tags.</p>{% endfor %}
+</div>
+{% endblock %}

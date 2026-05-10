@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Import nmap</h1></header>
+
+<form class="stack" action="/import/nmap" method="post" enctype="multipart/form-data">
+  <div class="row">
+    <input type="file" name="upload" accept=".xml,.gnmap,.nmap,.txt" required style="flex:1">
+    <select name="target_id">
+      <option value="">Match hosts by IP</option>
+      {% for t in targets %}
+      <option value="{{ t.id }}">Force into: {{ t.nickname }} ({{ t.address }})</option>
+      {% endfor %}
+    </select>
+    <label><input type="checkbox" name="create_targets" value="true"> Auto-create missing targets</label>
+    <button>Import</button>
+  </div>
+  <p class="muted" style="margin:0">Accepts nmap XML (<span class="mono">-oX</span>) or grepable (<span class="mono">-oG</span>) output. Open ports are added as services; duplicate ports are skipped.</p>
+</form>
+
+{% if result %}
+  {% if result.error %}
+  <div class="item" style="border-color:var(--danger);margin-top:12px">
+    <strong style="color:var(--danger)">Parse error</strong>
+    <pre>{{ result.error }}</pre>
+  </div>
+  {% else %}
+  <h2>Results — {{ result.filename }}</h2>
+  {% for row in result.rows %}
+  <details class="item" open>
+    <summary>
+      <span class="mono">{{ row.host.address }}</span>
+      {% if row.host.hostname %}<span class="muted">{{ row.host.hostname }}</span>{% endif %}
+      {% if row.target %}
+        <span class="pill low">matched: {{ row.target.nickname }}</span>
+        <span class="pill">+{{ row.added }} services</span>
+        {% if row.skipped %}<span class="muted">{{ row.skipped }} already existed</span>{% endif %}
+      {% else %}
+        <span class="pill high">no matching target</span>
+      {% endif %}
+    </summary>
+    {% if row.host.os_guess %}
+    <p class="muted" style="margin:10px 0 4px">OS: {{ row.host.os_guess }}</p>
+    {% endif %}
+    {% if row.host.services %}
+    <div class="table" style="margin-top:10px">
+      <div class="tr head"><span>Port</span><span>Protocol</span><span>Service</span><span>Product</span></div>
+      {% for svc in row.host.services %}
+      <div class="tr"><span class="mono">{{ svc.port }}</span><span>{{ svc.protocol }}</span><span>{{ svc.name }}</span><span class="muted">{{ svc.product }}</span></div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No open ports found.</p>
+    {% endif %}
+    {% if not row.target %}
+    <form class="inline-form" action="/targets" method="post" style="margin-top:10px">
+      <input type="hidden" name="address" value="{{ row.host.address }}">
+      <input name="nickname" placeholder="nickname" value="{{ row.host.hostname.split('.')[0] if row.host.hostname else row.host.address }}" required>
+      <button>Create target</button>
+    </form>
+    {% endif %}
+  </details>
+  {% endfor %}
+  {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ eng.name }} — Penetration Test Report</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+
+@page {
+  size: A4;
+  margin: 22mm 20mm 25mm 20mm;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.75;
+  color: #1f2937;
+  margin: 0;
+  background: #fff;
+}
+
+a { color: #1d4ed8; text-decoration: none; }
+
+/* ── Screen wrapper ── */
+@media screen {
+  body { max-width: 820px; margin: 0 auto; padding: 20px 24px 60px; }
+}
+
+/* ── Cover ── */
+.cover {
+  background: #0f1b2d;
+  color: #fff;
+  padding: 56px 60px 52px;
+  min-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  page-break-after: always;
+}
+
+@media screen { .cover { border-radius: 10px; margin-bottom: 40px; } }
+
+.cover-classification {
+  position: absolute;
+  top: 36px; right: 52px;
+  border: 1.5px solid rgba(255,255,255,.35);
+  border-radius: 5px;
+  padding: 4px 14px;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: .15em;
+  color: rgba(255,255,255,.7);
+}
+
+.cover-eyebrow {
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #60a5fa;
+  margin-bottom: 20px;
+}
+
+.cover-rule {
+  width: 52px; height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 2px;
+  margin-bottom: 24px;
+}
+
+.cover-title {
+  font-size: 28pt;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+
+.cover-subtitle {
+  font-size: 13pt;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 0;
+}
+
+.cover-meta {
+  margin-top: auto;
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 28px;
+}
+
+.cover-meta table { border-collapse: collapse; }
+.cover-meta td { padding: 5px 0; border: none; vertical-align: top; }
+.cover-meta td:first-child {
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.45);
+  padding-right: 28px;
+  white-space: nowrap;
+}
+.cover-meta td:last-child {
+  font-size: 11pt;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+}
+
+/* ── Section layout ── */
+.section { margin-bottom: 36px; }
+.page-break { page-break-before: always; padding-top: 8px; }
+
+h2 {
+  font-size: 15pt;
+  font-weight: 800;
+  color: #0f1b2d;
+  border-bottom: 2.5px solid #0f1b2d;
+  padding-bottom: 7px;
+  margin: 0 0 18px;
+  letter-spacing: -.3px;
+}
+
+h3 {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #111827;
+  margin: 22px 0 8px;
+}
+
+h4 {
+  font-size: 8.5pt;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin: 16px 0 6px;
+}
+
+p { margin: 0 0 10px; }
+ul, ol { margin: 4px 0 10px; padding-left: 22px; }
+li { margin: 2px 0; }
+
+/* ── Tables ── */
+table.data {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0 16px;
+  font-size: 9.5pt;
+}
+table.data th, table.data td {
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+}
+table.data th {
+  background: #f9fafb;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #374151;
+}
+table.data tr:nth-child(even) { background: #fafafa; }
+
+/* ── Severity badges ── */
+.sev {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 4px;
+  font-size: 8pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: #fff;
+  line-height: 1.4;
+}
+.sev.critical { background: #dc2626; }
+.sev.high     { background: #ea580c; }
+.sev.medium   { background: #d97706; }
+.sev.low      { background: #2563eb; }
+.sev.info     { background: #6b7280; }
+
+/* ── Severity summary ── */
+.sev-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0 24px;
+}
+.sev-card {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 90px;
+}
+.sev-card .sev-num {
+  font-size: 26pt;
+  font-weight: 900;
+  line-height: 1;
+  display: block;
+}
+.sev-card.critical .sev-num { color: #dc2626; }
+.sev-card.high .sev-num     { color: #ea580c; }
+.sev-card.medium .sev-num   { color: #d97706; }
+.sev-card.low .sev-num      { color: #2563eb; }
+.sev-card.info .sev-num     { color: #9ca3af; }
+
+/* ── Findings ── */
+.finding {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 24px;
+  page-break-inside: avoid;
+}
+
+.finding-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.finding-num {
+  font-size: 9pt;
+  color: #9ca3af;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+
+.finding-title {
+  font-size: 13pt;
+  font-weight: 800;
+  color: #0f1b2d;
+  flex: 1;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.finding-meta {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 14px;
+  font-size: 9pt;
+}
+.finding-meta td { padding: 4px 0; border: none; vertical-align: top; }
+.finding-meta td:first-child {
+  font-size: 8pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #9ca3af;
+  padding-right: 16px;
+  white-space: nowrap;
+  width: 140px;
+}
+
+/* ── Prose content ── */
+.prose { font-size: 10pt; }
+.prose p { margin: 0 0 8px; }
+.prose ul, .prose ol { margin: 4px 0 8px; padding-left: 20px; }
+.prose li { margin: 2px 0; }
+.prose code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9pt;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #111827;
+}
+.prose pre {
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 7px;
+  padding: 13px 16px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9pt;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  margin: 8px 0;
+}
+.prose pre code { background: none; border: none; padding: 0; color: inherit; }
+.prose blockquote {
+  border-left: 3px solid #d1d5db;
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: #6b7280;
+}
+
+/* ── Highlighted boxes ── */
+.box-steps {
+  background: #f8faff;
+  border: 1px solid #bfdbfe;
+  border-left: 3px solid #3b82f6;
+  border-radius: 0 7px 7px 0;
+  padding: 12px 16px;
+  margin: 6px 0 12px;
+}
+.box-remediation {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 3px solid #22c55e;
+  border-radius: 0 7px 7px 0;
+  padding: 12px 16px;
+  margin: 6px 0 12px;
+}
+.box-steps .prose, .box-remediation .prose { font-size: 9.5pt; }
+
+/* ── Evidence images ── */
+.evidence-img {
+  max-width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin: 8px 0 4px;
+  display: block;
+}
+.evidence-caption {
+  font-size: 8.5pt;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0 0 12px;
+}
+
+/* ── TOC ── */
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-list li { padding: 4px 0; border-bottom: 1px dotted #e5e7eb; display: flex; justify-content: space-between; }
+.toc-list li:last-child { border-bottom: none; }
+.toc-list .toc-num { color: #6b7280; font-weight: 600; margin-right: 10px; min-width: 32px; }
+.toc-list .toc-sev { margin-left: 10px; }
+.toc-sub { list-style: none; padding: 0 0 0 24px; margin: 2px 0; }
+.toc-sub li { padding: 2px 0; border-bottom: none; font-size: 9.5pt; }
+
+/* ── Methodology steps ── */
+.method-steps { counter-reset: method; list-style: none; padding: 0; }
+.method-steps li {
+  counter-increment: method;
+  padding: 10px 0 10px 48px;
+  position: relative;
+  border-bottom: 1px solid #f3f4f6;
+}
+.method-steps li:last-child { border-bottom: none; }
+.method-steps li::before {
+  content: counter(method);
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 30px; height: 30px;
+  background: #0f1b2d;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 10pt;
+}
+.method-steps li strong { display: block; margin-bottom: 2px; }
+
+/* ── Appendix tables ── */
+.cred-row td { font-family: 'Courier New', monospace; font-size: 9pt; }
+
+/* ── Print ── */
+@media print {
+  .page-break { page-break-before: always; }
+  .finding { page-break-inside: avoid; }
+  pre { white-space: pre-wrap; overflow-wrap: break-word; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="cover-classification">{{ classification }}</div>
+  <div class="cover-eyebrow">Penetration Test Report</div>
+  <div class="cover-rule"></div>
+  <div class="cover-title">{{ eng.name }}</div>
+  {% if eng.description %}<div class="cover-subtitle">{{ eng.description }}</div>{% endif %}
+  <div class="cover-meta">
+    <table>
+      <tr><td>Prepared for</td><td>{{ client }}</td></tr>
+      <tr><td>Prepared by</td><td>{{ assessor }}</td></tr>
+      <tr><td>Report date</td><td>{{ report_date }}</td></tr>
+      <tr><td>Classification</td><td>{{ classification }}</td></tr>
+      <tr><td>Total findings</td><td>{{ findings|length }} ({% for s in ["critical","high","medium","low","info"] %}{% if sev_counts[s] %}{{ sev_counts[s] }} {{ s }}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %})</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ DISCLAIMER ══ -->
+<div class="section page-break">
+  <h2>Confidentiality Notice</h2>
+  <p>This document contains sensitive security information prepared exclusively for <strong>{{ client }}</strong>. It is classified <strong>{{ classification }}</strong> and must not be disclosed to any third party without prior written consent. The findings described herein were identified under an authorised engagement and do not constitute permission to reproduce the described attacks outside the agreed scope.</p>
+  <p>Recipients are responsible for ensuring that this report is handled, stored, and disposed of in accordance with their information security policies.</p>
+</div>
+
+<!-- ════════════════════════════════════════ TABLE OF CONTENTS ══ -->
+<div class="section page-break">
+  <h2>Table of Contents</h2>
+  <ul class="toc-list">
+    <li><span><span class="toc-num">1.</span>Executive Summary</span></li>
+    <li><span><span class="toc-num">2.</span>Scope &amp; Targets</span></li>
+    <li><span><span class="toc-num">3.</span>Methodology</span></li>
+    <li>
+      <span><span class="toc-num">4.</span>Findings</span>
+    </li>
+  </ul>
+  {% if findings %}
+  <ul class="toc-sub" style="margin-top:2px">
+    {% for f in findings %}
+    <li>
+      <span class="toc-num">4.{{ loop.index }}</span>
+      {{ f.title }}
+      <span class="toc-sev"><span class="sev {{ f.severity.value }}">{{ f.severity.value }}</span></span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <ul class="toc-list" style="margin-top:4px">
+    {% if include_creds %}<li><span><span class="toc-num">A.</span>Appendix — Credentials</span></li>{% endif %}
+    {% if include_commands %}<li><span><span class="toc-num">B.</span>Appendix — Command Log</span></li>{% endif %}
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════ EXECUTIVE SUMMARY ══ -->
+<div class="section page-break">
+  <h2>1. Executive Summary</h2>
+  <p>
+    A penetration test was conducted against the infrastructure of <strong>{{ client }}</strong>.
+    The objective was to identify, exploit, and document security vulnerabilities across the in-scope targets,
+    and to provide actionable remediation guidance.
+  </p>
+  {% if findings %}
+  <p>
+    The assessment identified <strong>{{ findings|length }} security {{ 'vulnerability' if findings|length == 1 else 'vulnerabilities' }}</strong>
+    across {{ targets|length }} in-scope {{ 'target' if targets|length == 1 else 'targets' }}.
+    {% if sev_counts['critical'] > 0 %}
+    <strong>{{ sev_counts['critical'] }} critical</strong> finding{{ 's require' if sev_counts['critical'] != 1 else ' requires' }} immediate remediation as
+    {{ 'it' if sev_counts['critical'] == 1 else 'they' }} could result in full system compromise.
+    {% endif %}
+  </p>
+  {% else %}
+  <p>No exploitable vulnerabilities were identified during the assessment period.</p>
+  {% endif %}
+
+  <div class="sev-summary">
+    {% for sev in ["critical","high","medium","low","info"] %}
+    <div class="sev-card {{ sev }}">
+      <span class="sev-num">{{ sev_counts[sev] }}</span>
+      <span class="sev" style="margin-top:6px;display:inline-block">{{ sev }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if findings %}
+  <table class="data">
+    <thead><tr><th>#</th><th>Severity</th><th>Title</th><th>Affected Target</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for f in findings %}
+      <tr>
+        <td style="color:#9ca3af;font-size:9pt">4.{{ loop.index }}</td>
+        <td><span class="sev {{ f.severity.value }}">{{ f.severity.value }}</span></td>
+        <td>{{ f.title }}</td>
+        <td>{{ target_by_id[f.target_id].nickname if f.target_id and f.target_id in target_by_id else '—' }}</td>
+        <td style="color:#6b7280">{{ f.status.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+<!-- ════════════════════════════════════════════════ SCOPE ══ -->
+<div class="section page-break">
+  <h2>2. Scope &amp; Targets</h2>
+  {% if targets %}
+    {% for target in targets %}
+    <h3>{{ target.nickname }} <span style="font-weight:400;color:#6b7280;font-size:10pt">— <code>{{ target.address }}</code></span>{% if target.tags %} <span style="font-size:9pt;color:#9ca3af">· {{ target.tags }}</span>{% endif %}</h3>
+    {% set svcs = services_by_target.get(target.id, []) %}
+    {% if svcs %}
+    <table class="data" style="margin-top:6px">
+      <thead><tr><th>Port</th><th>Protocol</th><th>Service</th><th>Product / Version</th></tr></thead>
+      <tbody>
+        {% for svc in svcs %}
+        <tr><td><code>{{ svc.port }}</code></td><td>{{ svc.protocol }}</td><td>{{ svc.name or '—' }}</td><td style="color:#6b7280">{{ svc.product or '—' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#9ca3af;font-size:9.5pt">No services recorded.</p>
+    {% endif %}
+    {% if target.notes %}
+    <div class="prose" style="margin-top:6px;font-size:9.5pt;color:#4b5563">{{ target.notes|markdown|safe }}</div>
+    {% endif %}
+    {% endfor %}
+  {% else %}
+  <p class="muted">No targets recorded.</p>
+  {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════ METHODOLOGY ══ -->
+<div class="section page-break">
+  <h2>3. Methodology</h2>
+  <p>The assessment followed an industry-standard penetration testing methodology encompassing the following phases:</p>
+  <ul class="method-steps">
+    <li>
+      <strong>Reconnaissance &amp; Information Gathering</strong>
+      Passive and active enumeration of the target environment, including port scanning, service fingerprinting, DNS enumeration, and web technology identification.
+    </li>
+    <li>
+      <strong>Vulnerability Discovery</strong>
+      Systematic identification of potential weaknesses through automated scanning and manual testing, cross-referenced against known vulnerability databases (CVE, NVD, Exploit-DB).
+    </li>
+    <li>
+      <strong>Exploitation</strong>
+      Controlled exploitation of confirmed vulnerabilities to demonstrate real-world impact and establish a foothold. All exploitation was performed within the agreed scope and without causing service disruption.
+    </li>
+    <li>
+      <strong>Post-Exploitation &amp; Privilege Escalation</strong>
+      Assessment of the impact achievable from an initial foothold, including local privilege escalation, credential extraction, and lateral movement within the network.
+    </li>
+    <li>
+      <strong>Documentation &amp; Reporting</strong>
+      All findings were documented with reproduction steps, screenshots, and prioritised remediation recommendations tailored to the organisation's risk profile.
+    </li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════ FINDINGS ══ -->
+<div class="section page-break">
+  <h2>4. Findings</h2>
+  {% if not findings %}
+  <p style="color:#6b7280">No vulnerabilities were identified during this assessment.</p>
+  {% endif %}
+
+  {% for f in findings %}
+  <div class="finding {% if not loop.first %}page-break{% endif %}">
+    <div class="finding-header">
+      <span class="finding-num">4.{{ loop.index }}</span>
+      <h3 class="finding-title">{{ f.title }}</h3>
+      <span class="sev {{ f.severity.value }}">{{ f.severity.value }}</span>
+    </div>
+
+    <table class="finding-meta">
+      <tr>
+        <td>Status</td>
+        <td>{{ f.status.value }}</td>
+      </tr>
+      <tr>
+        <td>Affected Target</td>
+        <td>
+          {% if f.target_id and f.target_id in target_by_id %}
+            {{ target_by_id[f.target_id].nickname }}
+            <span style="color:#9ca3af"> — {{ target_by_id[f.target_id].address }}</span>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% if f.affected_service %}
+      <tr><td>Affected Service</td><td><code>{{ f.affected_service }}</code></td></tr>
+      {% endif %}
+      {% if f.tags %}
+      <tr><td>Tags</td><td style="color:#6b7280">{{ f.tags }}</td></tr>
+      {% endif %}
+    </table>
+
+    {% if f.description %}
+    <h4>Description</h4>
+    <div class="prose">{{ f.description|markdown|safe }}</div>
+    {% endif %}
+
+    {% if f.impact %}
+    <h4>Impact</h4>
+    <div class="prose">{{ f.impact|markdown|safe }}</div>
+    {% endif %}
+
+    {% if f.steps_to_reproduce %}
+    <h4>Steps to Reproduce</h4>
+    <div class="box-steps">
+      <div class="prose">{{ f.steps_to_reproduce|markdown|safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if f.evidence %}
+    <h4>Evidence</h4>
+    <div class="prose">{{ f.evidence|markdown|safe }}</div>
+    {% endif %}
+
+    {% set ev_list = evidence_by_finding.get(f.id, []) %}
+    {% if ev_list %}
+    <h4>Attached Evidence</h4>
+    {% for ev in ev_list %}
+      {% if ev.id in evidence_images %}
+      <img class="evidence-img" src="{{ evidence_images[ev.id] }}" alt="{{ ev.filename }}">
+      <p class="evidence-caption">Fig. {{ loop.index }}: {{ ev.filename }}{% if ev.notes %} — {{ ev.notes }}{% endif %}</p>
+      {% else %}
+      <p style="font-size:9pt;color:#6b7280">📎 <code>{{ ev.filename }}</code>{% if ev.notes %} — {{ ev.notes }}{% endif %}</p>
+      {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if f.remediation %}
+    <h4>Remediation</h4>
+    <div class="box-remediation">
+      <div class="prose">{{ f.remediation|markdown|safe }}</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ══════════════════════════════════ APPENDIX A: CREDENTIALS ══ -->
+{% if include_creds %}
+<div class="section page-break">
+  <h2>Appendix A — Credentials</h2>
+  {% if creds %}
+  <table class="data">
+    <thead><tr><th>Target</th><th>Service</th><th>Username</th><th>Secret</th><th>Type</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for c in creds %}
+      <tr class="cred-row">
+        <td>{{ target_by_id[c.target_id].nickname if c.target_id and c.target_id in target_by_id else '—' }}</td>
+        <td>{{ c.service or '—' }}</td>
+        <td><code>{{ c.username or '—' }}</code></td>
+        <td><code>{{ c.secret }}</code></td>
+        <td>{{ c.credential_type }}</td>
+        <td>{{ c.status.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#6b7280">No credentials recorded.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════════ APPENDIX B: COMMAND LOG ══ -->
+{% if include_commands %}
+<div class="section page-break">
+  <h2>Appendix B — Command Log</h2>
+  {% if commands %}
+    {% for c in commands %}
+    <div style="margin-bottom:20px;page-break-inside:avoid">
+      <div style="display:flex;gap:12px;align-items:baseline;border-bottom:1px solid #e5e7eb;padding-bottom:5px;margin-bottom:8px">
+        <code style="font-size:10pt;font-weight:700;color:#111827;flex:1;word-break:break-all">{{ c.command }}</code>
+        <span style="font-size:8.5pt;color:{% if c.exit_code == 0 %}#15803d{% else %}#dc2626{% endif %};white-space:nowrap;font-weight:700">exit {{ c.exit_code }}</span>
+      </div>
+      <div style="font-size:8.5pt;color:#9ca3af;margin-bottom:6px">
+        {{ c.created_at|dt }} &nbsp;·&nbsp; <code>{{ c.cwd or '/' }}</code>
+        {% if c.target_id and c.target_id in target_by_id %} &nbsp;·&nbsp; {{ target_by_id[c.target_id].nickname }}{% endif %}
+      </div>
+      {% if c.output %}
+      <pre style="background:#1f2937;color:#f9fafb;border-radius:7px;padding:11px 14px;font-family:'Courier New',monospace;font-size:8pt;overflow-wrap:break-word;white-space:pre-wrap;margin:0">{{ c.output[-3000:] }}</pre>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p style="color:#6b7280">No command logs recorded.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════ FOOTER ══ -->
+<div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:8.5pt;color:#9ca3af;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+  <span>{{ classification }} — {{ eng.name }}</span>
+  <span>Prepared by {{ assessor }} · {{ report_date }}</span>
+</div>
+
+</body>
+</html>

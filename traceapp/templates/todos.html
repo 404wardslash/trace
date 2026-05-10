@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top"><h1>Todos</h1></header>
+<form class="inline-form" action="/todos" method="post"><input name="text" placeholder="Attack idea or reminder" required><select name="target_id"><option value="">Target</option>{% for t in targets %}<option value="{{ t.id }}">{{ t.nickname }}</option>{% endfor %}</select><input name="priority" value="normal"><input name="tags" placeholder="tags"><button>Add</button></form>
+<section class="kanban">
+  {% for state in ["open","done"] %}
+  <div><h2>{{ state }}</h2>{% for todo in todos if todo.status.value == state %}<article class="item">
+    <form class="stack compact" action="/todos/{{ todo.id }}" method="post">
+      <input name="text" value="{{ todo.text }}" required>
+      <div class="row"><select name="target_id"><option value="">Unassigned</option>{% for t in targets %}<option value="{{ t.id }}" {{ "selected" if todo.target_id==t.id else "" }}>{{ t.nickname }}</option>{% endfor %}</select><select name="status">{% for s in ["open","done"] %}<option {{ "selected" if todo.status.value==s else "" }}>{{ s }}</option>{% endfor %}</select><input name="priority" value="{{ todo.priority }}"><input name="tags" value="{{ todo.tags }}" placeholder="tags"><button>Save</button></div>
+    </form>
+    <div class="actions"><form action="/todos/{{ todo.id }}/toggle" method="post"><button class="subtle">{{ "Done" if state=="open" else "Open" }}</button></form><form action="/todos/{{ todo.id }}/delete" method="post" onsubmit="return confirm('Delete this todo?');"><button class="danger">Delete</button></form></div>
+  </article>{% endfor %}</div>
+  {% endfor %}
+</section>
+{% endblock %}

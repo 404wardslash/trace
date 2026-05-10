@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="top">
+  <h1>Snippets</h1>
+  <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+    <div class="row" style="gap:6px;align-items:center">
+      <span class="mono muted" style="font-size:11px;letter-spacing:.05em">LHOST</span>
+      <input id="lhost" value="{{ lhost }}" style="width:148px" placeholder="your IP">
+    </div>
+    <div class="row" style="gap:6px;align-items:center">
+      <span class="mono muted" style="font-size:11px;letter-spacing:.05em">RHOST</span>
+      <input id="rhost" value="{{ rhost }}" style="width:148px" placeholder="target IP">
+    </div>
+    <div class="row" style="gap:6px;align-items:center">
+      <span class="mono muted" style="font-size:11px;letter-spacing:.05em">LPORT</span>
+      <input id="lport" value="4444" style="width:72px">
+    </div>
+  </div>
+</header>
+
+<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+  <input id="snip-search" placeholder="Search by name, tag, or command…" style="flex:1;min-width:200px">
+  <button class="subtle cat-btn active" data-cat="" onclick="setCategory(this); return false;">All</button>
+  {% if custom_snippets %}<button class="subtle cat-btn" data-cat="__custom__" onclick="setCategory(this); return false;">⭐ Custom</button>{% endif %}
+  {% for cat in categories %}
+  <button class="subtle cat-btn" data-cat="{{ cat }}" onclick="setCategory(this); return false;">{{ cat }}</button>
+  {% endfor %}
+</div>
+
+<div id="count-bar" class="muted" style="font-size:12px;margin-bottom:10px"></div>
+
+{% if custom_snippets %}
+<div style="margin-bottom:6px">
+  <h2>Custom</h2>
+  {% for c in custom_snippets %}
+  <details class="item snippet-item"
+    data-cat="__custom__"
+    data-search="{{ c.name }} {{ c.description }} {{ c.tags }} {{ c.command }}"
+    data-template="{{ c.command }}">
+    <summary>
+      <span class="pill" style="font-size:10px;background:rgba(46,160,67,.12);color:var(--accent-2);border:1px solid rgba(46,160,67,.25)">{{ c.category }}</span>
+      <strong style="font-size:14px">{{ c.name }}</strong>
+      <span class="muted" style="font-size:12px;margin-left:4px">{{ c.description }}</span>
+      {% if c.tags %}<span class="muted" style="font-size:11px;margin-left:auto;white-space:nowrap">{{ c.tags }}</span>{% endif %}
+    </summary>
+    <div style="margin-top:8px">
+      <pre class="snippet-pre" style="margin:0"><code class="snippet-code">{{ c.command }}</code></pre>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="subtle copy-btn" onclick="copySnippet(this); return false;">Copy</button>
+        <form action="/snippets/custom/{{ c.id }}/delete" method="post" onsubmit="return confirm('Delete this snippet?');" style="margin:0">
+          <button class="danger" style="min-height:28px;padding:2px 10px;font-size:12px;">Delete</button>
+        </form>
+      </div>
+    </div>
+  </details>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div id="snippets-list">
+  {% for s in snippets %}
+  <details class="item snippet-item"
+    data-cat="{{ s.category }}"
+    data-search="{{ s.name }} {{ s.description }} {{ s.tags|join(' ') }} {{ s.command }}"
+    data-template="{{ s.command }}">
+    <summary>
+      <span class="pill" style="font-size:10px;background:rgba(88,166,255,.10);color:var(--accent);border:1px solid rgba(88,166,255,.18)">{{ s.category }}</span>
+      <strong style="font-size:14px">{{ s.name }}</strong>
+      <span class="muted" style="font-size:12px;margin-left:4px">{{ s.description }}</span>
+      {% if s.tags %}<span class="muted" style="font-size:11px;margin-left:auto;white-space:nowrap">{{ s.tags|join(' · ') }}</span>{% endif %}
+    </summary>
+    <div style="margin-top:8px">
+      <pre class="snippet-pre" style="margin:0"><code class="snippet-code">{{ s.command }}</code></pre>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="subtle copy-btn" onclick="copySnippet(this); return false;">Copy</button>
+        <span class="mono muted" style="font-size:11px">{{ s.id }}</span>
+      </div>
+    </div>
+  </details>
+  {% endfor %}
+</div>
+
+<details class="item" style="margin-top:20px">
+  <summary><strong>+ Add custom snippet</strong></summary>
+  <form class="stack compact" action="/snippets/custom" method="post" style="margin-top:12px">
+    <div class="row">
+      <input name="name" placeholder="Name" required style="flex:2">
+      <input name="category" placeholder="Category" value="Custom" style="flex:1">
+    </div>
+    <textarea name="command" placeholder="Command — use {LHOST}, {RHOST}, {LPORT}, {TARGET} as placeholders" required style="min-height:70px;font-family:ui-monospace,monospace;font-size:13px"></textarea>
+    <div class="row">
+      <input name="description" placeholder="Short description" style="flex:2">
+      <input name="tags" placeholder="tags, comma-separated" style="flex:1">
+    </div>
+    <button>Save snippet</button>
+  </form>
+</details>
+
+<style>
+.cat-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.cat-btn.active { background: rgba(88,166,255,.15); color: var(--accent); border-color: rgba(88,166,255,.35); }
+.snippet-item > summary { align-items: center; gap: 8px; flex-wrap: wrap; }
+.snippet-item > summary::after { display: none; }
+.snippet-pre { border-radius: 6px; }
+.snippet-pre::before { display: none; }
+</style>
+
+<script>
+const lhostIn = document.getElementById('lhost');
+const rhostIn = document.getElementById('rhost');
+const lportIn = document.getElementById('lport');
+const searchIn = document.getElementById('snip-search');
+const countBar = document.getElementById('count-bar');
+let activeCat = '';
+
+function subst(template) {
+  return template
+    .replace(/\{LHOST\}/g, lhostIn.value || '{LHOST}')
+    .replace(/\{RHOST\}/g, rhostIn.value || '{RHOST}')
+    .replace(/\{LPORT\}/g, lportIn.value || '{LPORT}')
+    .replace(/\{TARGET\}/g, rhostIn.value || '{TARGET}');
+}
+
+function updateAll() {
+  const q = searchIn.value.toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.snippet-item').forEach(el => {
+    const code = el.querySelector('.snippet-code');
+    if (code) code.textContent = subst(el.dataset.template);
+    const matchCat = !activeCat || el.dataset.cat === activeCat;
+    const matchQ = !q || el.dataset.search.toLowerCase().includes(q);
+    const show = matchCat && matchQ;
+    el.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  countBar.textContent = visible + ' snippet' + (visible !== 1 ? 's' : '');
+}
+
+function setCategory(btn) {
+  activeCat = btn.dataset.cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b === btn));
+  updateAll();
+}
+
+function copySnippet(btn) {
+  const code = btn.closest('.snippet-item').querySelector('.snippet-code');
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  });
+}
+
+lhostIn.addEventListener('input', updateAll);
+rhostIn.addEventListener('input', updateAll);
+lportIn.addEventListener('input', updateAll);
+searchIn.addEventListener('input', updateAll);
+
+updateAll();
+</script>
+{% endblock %}
